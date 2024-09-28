@@ -1,28 +1,39 @@
-import React, { useEffect } from "react";
-import { useGlobalContext } from "./Context";
+import React from "react";
+import { useGlobalContext } from "./context";
 
 const Stories = () => {
-  const { hits } = useGlobalContext();
-  let isLoading = true;
+  const { hits, isLoading, removePost } = useGlobalContext();
 
-  //   if (isLoading) {
-  //     return (
-  //       <>
-  //         <h1>Loading......</h1>
-  //       </>
-  //     );
-  //   }
+  if (isLoading) {
+    return <h1>Loading.....</h1>;
+  }
+
+  if (hits.length === 0) {
+    return <h1>No stories found.</h1>;
+  }
+
   return (
-    <>
-      <h2>My teh news post</h2>
+    <div className="stories-div">
       {hits.map((curPost) => {
+        const { title, author, objectID, url, num_comments } = curPost;
         return (
-          <>
-            <h2>{curPost.title}</h2>
-          </>
+          <div className="card" key={objectID}>
+            <h2>{title ? title : "No Title"}</h2>
+            <p>
+              By <span>{author}</span> | <span>{num_comments}</span> comments
+            </p>
+            <div className="card-button">
+              {url && (
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                  Read More
+                </a>
+              )}
+              <button onClick={() => removePost(objectID)}>Remove</button>
+            </div>
+          </div>
         );
       })}
-    </>
+    </div>
   );
 };
 

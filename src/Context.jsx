@@ -1,7 +1,7 @@
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useReducer, useEffect } from "react";
 import Reducer from "./Reducer";
-import { useEffect } from "react";
-let api = "https://hn.algolia.com/api/v1/search?";
+
+const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?";
 
 export const initialState = {
   isLoading: true,
@@ -12,38 +12,63 @@ export const initialState = {
 };
 
 export const AppContext = createContext();
+
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(Reducer, initialState);
+
   const fetchApiData = async (url) => {
+    dispatch({ type: "SET_LOADING" });
     try {
       const res = await fetch(url);
       const data = await res.json();
-      dispatch({type:"getStories",
-        payload:{
-            hits:data.hits,
-            nbPages:data.nbPages,
-            
-
-
-        }
-      })
-      //   isLoading=false
+      dispatch({
+        type: "GET_STORIES",
+        payload: {
+          hits: data.hits,
+          nbPages: data.nbPages,
+        },
+      });
       console.log(data);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
   };
+
   useEffect(() => {
-    fetchApiData(`${api}query=${state.query}&page=${state.page}`);
-  }, []);
+    fetchApiData(`${API_ENDPOINT}query=${state.query}&page=${state.page}`);
+  }, [state.query, state.page]);
+
+  const removePost = (id) => {
+    dispatch({ type: "REMOVE_POST", payload: id });
+  };
+
+  const searchPost = (searchQuery) => {
+    dispatch({ type: "SEARCH_QUERY", payload: searchQuery });
+  };
+
+  const nextPage = () => {
+    dispatch({ type: "NEXT_PAGE" });
+  };
+
+  const prevPage = () => {
+    dispatch({ type: "PREV_PAGE" });
+  };
 
   return (
-    <>
-      <AppContext.Provider value={{...state}}>{children}</AppContext.Provider>
-    </>
+    <AppContext.Provider
+      value={{
+        ...state,
+        removePost,
+        searchPost,
+        nextPage,
+        prevPage,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
   );
 };
-//custom hook
+
 export const useGlobalContext = () => {
   return useContext(AppContext);
 };
